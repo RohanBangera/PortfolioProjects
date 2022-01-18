@@ -1,0 +1,63 @@
+library(twitteR)
+library(purrr)
+library(plyr)
+require('ROAuth')
+require('RCurl')
+library(httr)
+library(dplyr)
+library(stringr)
+
+score.sentiment <- function(sentences, pos.words, neg.words, .progress= 'none')
+{
+  require(plyr)
+  require(stringr)
+  scores <- laply(sentences, function(sentence, pos.words , neg.words) {
+  sentence <- gsub( '[[:punct:]]',"", sentence)
+  sentence <- gsub( '[[:cntrl:]]' , "", sentence)
+  sentence <- gsub('\\d+', "", sentence)
+  sentence <- tolower(sentence)
+  word.list <- str_split(ex, '\\s+')
+  words <- unlist(word.list)
+  pos.matches <- match(words, pos.words)
+  neg.matches <- match(words, neg.words)
+  pos.matches <- !is.na(pos.matches)
+  neg.matches <- !is.na(neg.matches)
+  score <- sum(pos.matches) - sum(neg.matches)
+  return(score)
+}, pos.words, neg.words, .progress=.progress)
+scores.df <- data.frame(score=scores, text=sentences)
+return(scores.df)
+}
+
+pos.words = scan('C:/Users/rohan/Documents/+words.txt',what ='character', comment.char=';')
+neg.words = scan('C:/Users/rohan/Documents/-words.txt', what ='character', comment.char=';')
+
+utdscore <- score.sentiment(tweet_df$text,pos.words,neg.words,.progress='text')
+livscore <- score.sentiment(tweet2_df$text,pos.words,neg.words,.progress='text')
+hist(utdscore$score)
+hist(livscore$score)
+options(rsconnect.http = 'RCurl')
+RCurl::curlVersion()$ssl_version
+
+consumerKey <-'MJgsqF6cRyqVQUkjn4gR4rzxcZJnclGyOgJ00Em6X8VizH4Xx3'
+reqURL <- "https://api.twitter.com/oauth/request_token"
+accessURL <- "https://api.twitter.com/oauth/access_token"
+authURL <- "https://api.twitter.com/oauth/authorize"
+consumerSecret <- "MJgsqF6cRyqVQUkjn4gR4rzxcZJnclGyOgJ00Em6X8VizH4Xx3"
+accesstoken <- "3048913165-QahJTWCGurvS0kN41lAfxL44tiUgbK1ecXo7wBF"
+accesstokensecret <- "EFPEP7bMS3J2T33MuOvwY0baz15RAaAAS1CKVWZKlEgKF"
+twitCred <- OAuthFactory$new(consumerKey=consumerKey,
+                             consumerSecret=consumerSecret,
+                             requestURL=reqURL,
+                             accessURL=accessURL,
+                             authURL=authURL)
+twitCred$handshake()
+  setup_twitter_oauth(consumerKey, consumerSecret, accesstoken, accesstokensecret)
+  tweet1 <- userTimeline("@ManUtd", n=100)
+  tweet2 <- userTimeline("@LFC",n=100)
+  tweet_df <- tbl_df(map_df(tweet1,as.data.frame))
+  tweet2_df <- tbl_df(map_df(tweet2,as.data.frame))
+ 
+
+
+
